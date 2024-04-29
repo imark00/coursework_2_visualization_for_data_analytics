@@ -2,6 +2,8 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
+import plotly.express as px
+import plotly.io as pio
 
 def create_group_barchart_for_symptoms(param1,df, title):
     # List of columns for which to calculate the percentage of 'Yes' responses
@@ -110,9 +112,69 @@ def data_preprocessing():
         return df
     else:
         print('File does not!')
+        
+def crete_map_for_country_and_yes_care_options(df:pd.DataFrame):
+    country_careOptions_df = df.groupby(['country'])['care_options'].value_counts().unstack().reset_index().fillna(0)
+    country_careOptions_df.columns = country_careOptions_df.columns.str.strip().str.lower().str.replace(' ', '_')
+
+    country_careOptions_df['yes_percentages'] = round((country_careOptions_df['yes'] / country_careOptions_df['yes'].sum()) * 100, 2)
+    country_careOptions_df['no_percentages'] = round((country_careOptions_df['no'] / country_careOptions_df['no'].sum()) * 100, 2)
+    country_careOptions_df['not_sure_percentages'] = round((country_careOptions_df['not_sure'] / country_careOptions_df['not_sure'].sum()) * 100, 2)
+    
+    pio.renderers.default = 'browser'
+    fig = px.choropleth(country_careOptions_df, locations='country', locationmode='country names', color='yes_percentages', hover_name='country', hover_data='yes',color_continuous_scale= 'Greens', title='Yes Care Options by Country')
+    fig.show() 
+    
+    
+def create_map_for_country_and_yes_family_history(df:pd.DataFrame):
+    country_family_history_df = df.groupby(['country'])['family_history'].value_counts().unstack().reset_index().fillna(0)
+    country_family_history_df.columns = country_family_history_df.columns.str.strip().str.lower().str.replace(' ', '_')
+
+    country_family_history_df['yes_percentages'] = round((country_family_history_df['yes'] / country_family_history_df['yes'].sum()) * 100, 2)
+    country_family_history_df['no_percentages'] = round((country_family_history_df['no'] / country_family_history_df['no'].sum()) * 100, 2)
+    
+    pio.renderers.default = 'browser'
+    fig = px.choropleth(country_family_history_df, locations='country', locationmode='country names', color='yes_percentages', hover_name='country',hover_data='yes', color_continuous_scale= 'Greens',title='Yes Family History by Country')
+    fig.show() 
+
+
+def create_map_for_country_and_yes_mental_health_history(df:pd.DataFrame):
+    country_mental_health_history_df = df.groupby(['country'])['mental_health_history'].value_counts().unstack().reset_index().fillna(0)
+    country_mental_health_history_df.columns = country_mental_health_history_df.columns.str.strip().str.lower().str.replace(' ', '_')
+
+    country_mental_health_history_df['yes_percentages'] = round((country_mental_health_history_df['yes'] / country_mental_health_history_df['yes'].sum()) * 100, 2)
+    country_mental_health_history_df['no_percentages'] = round((country_mental_health_history_df['no'] / country_mental_health_history_df['no'].sum()) * 100, 2)
+
+    pio.renderers.default = 'browser'
+    fig = px.choropleth(country_mental_health_history_df, locations='country', locationmode='country names', color='yes_percentages', hover_name='country', hover_data='yes',color_continuous_scale= 'Greens',title='Yes Mental Health History by Country')
+    fig.show() 
+    
+    
+def create_map_for_country_and_yes_treatment(df:pd.DataFrame):
+    country_treatment_df = df.groupby(['country'])['treatment'].value_counts().unstack().reset_index().fillna(0)
+    country_treatment_df.columns = country_treatment_df.columns.str.strip().str.lower().str.replace(' ', '_')
+
+    country_treatment_df['yes_percentages'] = round((country_treatment_df['yes'] / country_treatment_df['yes'].sum()) * 100, 2)
+    country_treatment_df['no_percentages'] = round((country_treatment_df['no'] / country_treatment_df['no'].sum()) * 100, 2)
+    
+    pio.renderers.default = 'browser'
+    fig = px.choropleth(country_treatment_df, locations='country', locationmode='country names', color='yes_percentages', hover_name='country', hover_data='yes',color_continuous_scale= 'Greens', title='Yes Treatment by Country')
+    fig.show() 
+    
+    
+
+def map_visualization(df:pd.DataFrame):
+    df.columns = df.columns.str.strip().str.lower()
+    crete_map_for_country_and_yes_care_options(df)
+    create_map_for_country_and_yes_family_history(df)
+    create_map_for_country_and_yes_mental_health_history(df)
+    create_map_for_country_and_yes_treatment(df)
+
+
 
 def data_analysis():
     df = data_preprocessing()
     barchart_visulization(df)
+    map_visualization(df)
 
 data_analysis()
