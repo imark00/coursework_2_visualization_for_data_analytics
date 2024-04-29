@@ -1,6 +1,15 @@
+#  This code generates visualizations for a mental health dataset. First, preprocessing is done on the dataset to clean and format the data. 
+# Then, the data is visualized using bar charts, radar charts, and scatter plots to analyze the factors influencing mental health adn people's attitude towards mental health. 
+# The libraries used for this code are as follows:
+# pandas                       2.2.1
+# plotly                       5.21.0
+# matplotlib                   3.8.0
+# seaborn                      0.13.2 
+
 import pandas as pd
-import os
+import plotly.express as px
 import matplotlib.pyplot as plt
+import os
 import seaborn as sns
 import plotly.express as px
 import plotly.io as pio
@@ -113,6 +122,7 @@ def data_preprocessing():
     else:
         print('File does not!')
         
+        
 def crete_map_for_country_and_yes_care_options(df:pd.DataFrame):
     country_careOptions_df = df.groupby(['country'])['care_options'].value_counts().unstack().reset_index().fillna(0)
     country_careOptions_df.columns = country_careOptions_df.columns.str.strip().str.lower().str.replace(' ', '_')
@@ -170,11 +180,148 @@ def map_visualization(df:pd.DataFrame):
     create_map_for_country_and_yes_mental_health_history(df)
     create_map_for_country_and_yes_treatment(df)
 
-
-
 def data_analysis():
     df = data_preprocessing()
     barchart_visulization(df)
     map_visualization(df)
 
 data_analysis()
+
+
+# """Data Preprocessing for Radar Chart: Converting Categorical Data to Numerical Data
+# This function will allow us to convert the categorical data to numerical data for the radar chart, with 1 being
+# the response we are interested in and 0 being the other responses. This will allow us to plot the radar chart"""
+df_mental_health = data_preprocessing();
+
+def data_preprocessing_radar_chart(factor_response, decision_response):
+    df_radar_response = df_mental_health.copy() # Copying the original dataframe to a new dataframe
+    # Mapping the responses to ensure uniformity 
+    df_radar_response["Mood_Swings"] = df_radar_response["Mood_Swings"].map({"High" : "Yes", "Medium" : "Maybe", "Low" : "No"}) 
+    df_radar_response["Care_Options"] = df_radar_response["Care_Options"].map({"Yes" : "Yes", "No" : "No", "Not sure" : "Maybe"})
+
+    df_radar_response["Family_History"] = df_radar_response["Family_History"].map({factor_response : 1}).fillna(0)
+    df_radar_response["Treatment"] = df_radar_response["Treatment"].map({factor_response : 1}).fillna(0)
+    df_radar_response["Growing_Stress"] = df_radar_response["Growing_Stress"].map({factor_response : 1}).fillna(0)
+    df_radar_response["Changes_Habits"] = df_radar_response["Changes_Habits"].map({factor_response : 1}).fillna(0)
+    df_radar_response["Mental_Health_History"] = df_radar_response["Mental_Health_History"].map({factor_response : 1}).fillna(0)
+    df_radar_response["Mood_Swings"] = df_radar_response["Mood_Swings"].map({factor_response : 1}).fillna(0) 
+    df_radar_response["Coping_Struggles"] = df_radar_response["Coping_Struggles"].map({factor_response : 1}).fillna(0)
+    df_radar_response["Work_Interest"] = df_radar_response["Work_Interest"].map({factor_response : 1}).fillna(0)
+    df_radar_response["Social_Weakness"] = df_radar_response["Social_Weakness"].map({factor_response : 1}).fillna(0)
+    df_radar_response["Mental_Health_Interview"] = df_radar_response["Mental_Health_Interview"].map({factor_response : 1}).fillna(0)
+    df_radar_response["Care_Options"] = df_radar_response["Care_Options"].map({decision_response : 1}).fillna(0)
+
+    return df_radar_response
+
+df_radar_positive_1 = data_preprocessing_radar_chart("Yes", "Yes");
+df_radar_positive_2 = data_preprocessing_radar_chart("No", "Yes");
+df_radar_positive_3 = data_preprocessing_radar_chart("Maybe", "Yes");
+
+df_radar_negative_1 = data_preprocessing_radar_chart("No", "No");
+df_radar_negative_2 = data_preprocessing_radar_chart("Yes", "No");
+df_radar_negative_3 = data_preprocessing_radar_chart("Maybe", "No");
+
+df_radar_neutral_1 = data_preprocessing_radar_chart("Yes", "Maybe");
+df_radar_neutral_2 = data_preprocessing_radar_chart("No", "Maybe");
+df_radar_neutral_3 = data_preprocessing_radar_chart("Maybe", "Maybe");
+
+
+# """Radar Chart for People Opting for Care Options"""
+def radar_plotter(df_radar, response1, response2):
+    df_radar.drop(df_radar[df_radar["Care_Options"] == 0].index, inplace = True)
+    radar_dict = dict(
+                    score = [(df_radar["Family_History"].mean()), (df_radar["Treatment"].mean()),
+                    (df_radar["Growing_Stress"].mean()), (df_radar["Changes_Habits"].mean()),
+                    (df_radar["Mental_Health_History"].mean()), (df_radar["Mood_Swings"].mean()),
+                    (df_radar["Coping_Struggles"].mean()), (df_radar["Work_Interest"].mean()),
+                    (df_radar["Social_Weakness"].mean()), (df_radar["Mental_Health_Interview"].mean())],
+                    names = ["Family History", "Treatment", "Growing Stress", "Changes Habits", "Mental Health History", "Mood Swings", "Coping Struggles",
+                    "Work Interest", "Social Weakness", "Mental Health Interview"]
+                    )
+
+    fig_radar = px.line_polar(radar_dict, r = 'score', theta = 'names', line_close = True)
+    fig_radar.update_traces(fill = 'toself')
+    fig_radar.update_layout(
+                            title = ("Radar Chart for People Opting " + response1 + " for Care Options and " + response2 + " for Influencing Factors"), 
+                            title_x = 0.5,
+                            polar = dict(
+                                        radialaxis = dict(
+                                                        visible = True,
+                                                        range = [0, 1],
+                                                        tickmode = 'array',
+                                                        tickvals = [i/10 for i in range(11)]
+                                                        )
+                                        )
+                            )
+    fig_radar.show() 
+
+
+radar_plotter(df_radar_positive_1, "Yes", "Yes")
+radar_plotter(df_radar_positive_2, "Yes", "No")
+radar_plotter(df_radar_positive_3, "Yes", "Maybe")
+radar_plotter(df_radar_negative_1, "No", "No")
+radar_plotter(df_radar_negative_2, "No", "Yes")
+radar_plotter(df_radar_negative_3, "No", "Maybe")
+radar_plotter(df_radar_neutral_1, "Maybe", "Yes")
+radar_plotter(df_radar_neutral_2, "Maybe", "No")
+radar_plotter(df_radar_neutral_3, "Maybe", "Maybe")
+
+
+# """Scatter Plot for Prevalence of Factors Influencing Mental Health by Gender"""
+# Mapping for Factors Influencing Mental Health
+def data_mapping_scatterplot(response):
+    df_mapped = df_mental_health.copy() # Copying the original dataframe to a new dataframe
+    # Mapping the responses to ensure uniformity 
+    df_mapped["Mood_Swings"] = df_mapped["Mood_Swings"].map({"High" : "Yes", "Medium" : "Maybe", "Low" : "No"}) 
+    df_mapped["Care_Options"] = df_mapped["Care_Options"].map({"Yes" : "Yes", "No" : "No", "Not sure" : "Maybe"})
+
+    df_mapped["Family_History"] = df_mapped["Family_History"].map({response : 1}).fillna(0)
+    df_mapped["Treatment"] = df_mapped["Treatment"].map({response : 1}).fillna(0)
+    df_mapped["Growing_Stress"] = df_mapped["Growing_Stress"].map({response : 1}).fillna(0)
+    df_mapped["Changes_Habits"] = df_mapped["Changes_Habits"].map({response : 1}).fillna(0)
+    df_mapped["Mental_Health_History"] = df_mapped["Mental_Health_History"].map({response : 1}).fillna(0)
+    df_mapped["Mood_Swings"] = df_mapped["Mood_Swings"].map({response : 1}).fillna(0) 
+    df_mapped["Coping_Struggles"] = df_mapped["Coping_Struggles"].map({response : 1}).fillna(0)
+    df_mapped["Work_Interest"] = df_mapped["Work_Interest"].map({response : 1}).fillna(0)
+    df_mapped["Social_Weakness"] = df_mapped["Social_Weakness"].map({response : 1}).fillna(0)
+    df_mapped["Mental_Health_Interview"] = df_mapped["Mental_Health_Interview"].map({response : 1}).fillna(0)
+    df_mapped["Care_Options"] = df_mapped["Care_Options"].map({response : 1}).fillna(0)
+
+    return df_mapped
+
+df_mapped_yes = data_mapping_scatterplot("Yes")
+
+# Prevalence of Factors Influencing Mental Health
+factors = ["Family_History", "Treatment", "Growing_Stress", "Changes_Habits", "Mental_Health_History", "Mood_Swings", "Coping_Struggles", 
+                "Work_Interest", "Social_Weakness", "Mental_Health_Interview", "Care_Options"] # List of factors and decisions influencing mental health
+
+def prevalence_by_gender(df, gender):
+    df_mapped_copy = df.copy() # Copying the original dataframe to a new dataframe
+    prevalence = [] # List to store the prevalence of each gender
+    df_mapped_copy.drop(df_mapped_copy[df_mapped_copy["Gender"] != gender].index, inplace = True) # Filtering the dataframe by gender
+
+    for factor in factors:
+        prevalence.append(df_mapped_copy[factor].mean()) # Calculating the prevalence of each factor
+
+    return prevalence
+
+prevalence_male = prevalence_by_gender(df_mapped_yes, "Male")
+prevalence_female = prevalence_by_gender(df_mapped_yes, "Female")
+
+# Creating new dataframe for scatter plot
+df_prevalence = pd.DataFrame({"Factor": factors, "Male": prevalence_male, "Female": prevalence_female})
+
+# Scatter Plot 
+plt.figure(figsize = (10, 5))
+for i in range(df_prevalence.shape[0]):
+    plt.scatter(df_prevalence['Male'][i], df_prevalence['Female'][i], s = 50)
+
+limits = (0, 1)
+plt.plot(limits, limits, color = "black", linestyle = "dashed") # Adding a dashed line to split the plot in half and show the difference between the genders
+
+plt.xlabel("Prevalence in Males")
+plt.ylabel("Prevalence in Females")
+plt.title("Prevalence of Factors Influencing Mental Health by Gender")
+plt.legend(factors)
+plt.grid(True)
+plt.show()
