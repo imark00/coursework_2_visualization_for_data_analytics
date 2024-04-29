@@ -1,3 +1,11 @@
+"""This code generates visualizations for a mental health dataset. First, preprocessing is done on the dataset to clean and format the data. 
+Then, the data is visualized using bar charts, radar charts, and scatter plots to analyze the factors influencing mental health adn people's attitude towards mental health. 
+The libraries used for this code are as follows:
+pandas                       2.2.1
+plotly                       5.21.0
+matplotlib                   3.8.0
+seaborn                      0.13.2
+"""
 import pandas as pd
 import plotly.express as px
 import matplotlib.pyplot as plt
