@@ -29,9 +29,28 @@ def create_group_barchart_for_symptoms(param1,df, title):
 
     plt.show()
 
+def create_group_barchart_for_mental_health_interview(param1,df, title):
+    columns_of_interest = ['Mental_Health_Interview']
+    percentage_no_dict = {}
+    for column in columns_of_interest:
+        grouped_counts = df.groupby([param1, column]).size().unstack(fill_value=0)
+        total_responses = grouped_counts.sum(axis=1)
+        no_count = grouped_counts.get('No', 0)
+        percentage_no = ((no_count) / total_responses) * 100
+        percentage_no_dict[column] = percentage_no
+
+    percentage_no_df = pd.DataFrame(percentage_no_dict)
+    print(percentage_no_df)
+    plt.figure(figsize=(12, 9))
+    percentage_no_df.plot(kind='bar', width=0.8, colormap='viridis', legend=False)
+    plt.title(title)
+    plt.xlabel(param1)
+    plt.ylabel('Percentage of "No" Responses')
+    plt.xticks(rotation=0,fontsize=10)
+    plt.show()
+
 def create_barchart_for_mental_health_interview(df):
-    filtered_df = df[df['Mental_Health_Interview'] == 'No']
-    grouped_counts = filtered_df.groupby('Occupation').size()
+    grouped_counts = df.groupby('Occupation').size()
     total_responses = grouped_counts.sum()
     percentage_responses = (grouped_counts / total_responses) * 100
     print(percentage_responses)
@@ -47,6 +66,7 @@ def barchart_visulization(df):
     create_group_barchart_for_symptoms('Occupation',df,'Occupation x Influencing Factors')
     create_group_barchart_for_symptoms('Self_Employed',df,'Self Employment x Influencing Factors')
     create_group_barchart_for_symptoms('Days_Indoors',df,'Days Indoor x Influencing Factors')
+    create_group_barchart_for_mental_health_interview('Occupation',df,'Occupation x Mental Health Interview')
     create_barchart_for_mental_health_interview(df)
 
 
